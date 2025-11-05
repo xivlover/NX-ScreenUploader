@@ -25,44 +25,59 @@ template <size_t ExpectedLen>
 }  // namespace
 
 std::string getLastAlbumItem() {
-    std::vector<std::string> years, months, days, files;
-
     const std::string albumPath{ALBUM_PATH};
     if (!fs::is_directory(albumPath))
         return "<No album directory: " + albumPath + ">";
 
-    years.reserve(8);
+    // 找最大的年份目录
+    std::string maxYear;
     for (const auto& entry : fs::directory_iterator(albumPath)) {
-        if (isValidDigitPath<4>(entry))
-            years.emplace_back(entry.path().string());
+        if (isValidDigitPath<4>(entry)) {
+            const auto path = entry.path().string();
+            if (maxYear.empty() || path > maxYear) {
+                maxYear = path;
+            }
+        }
     }
-    if (years.empty()) return "<No years in " + albumPath + ">";
-    std::ranges::sort(years);
+    if (maxYear.empty()) return "<No years in " + albumPath + ">";
 
-    months.reserve(12);
-    for (const auto& entry : fs::directory_iterator(years.back())) {
-        if (isValidDigitPath<2>(entry))
-            months.emplace_back(entry.path().string());
+    // 找最大的月份目录
+    std::string maxMonth;
+    for (const auto& entry : fs::directory_iterator(maxYear)) {
+        if (isValidDigitPath<2>(entry)) {
+            const auto path = entry.path().string();
+            if (maxMonth.empty() || path > maxMonth) {
+                maxMonth = path;
+            }
+        }
     }
-    if (months.empty()) return "<No months in " + years.back() + ">";
-    std::ranges::sort(months);
+    if (maxMonth.empty()) return "<No months in " + maxYear + ">";
 
-    days.reserve(31);
-    for (const auto& entry : fs::directory_iterator(months.back())) {
-        if (isValidDigitPath<2>(entry))
-            days.emplace_back(entry.path().string());
+    // 找最大的日期目录
+    std::string maxDay;
+    for (const auto& entry : fs::directory_iterator(maxMonth)) {
+        if (isValidDigitPath<2>(entry)) {
+            const auto path = entry.path().string();
+            if (maxDay.empty() || path > maxDay) {
+                maxDay = path;
+            }
+        }
     }
-    if (days.empty()) return "<No days in " + months.back() + ">";
-    std::ranges::sort(days);
+    if (maxDay.empty()) return "<No days in " + maxMonth + ">";
 
-    files.reserve(32);
-    for (const auto& entry : fs::directory_iterator(days.back())) {
-        if (entry.is_regular_file()) files.emplace_back(entry.path().string());
+    // 找最大的文件
+    std::string maxFile;
+    for (const auto& entry : fs::directory_iterator(maxDay)) {
+        if (entry.is_regular_file()) {
+            const auto path = entry.path().string();
+            if (maxFile.empty() || path > maxFile) {
+                maxFile = path;
+            }
+        }
     }
-    if (files.empty()) return "<No screenshots in " + days.back() + ">";
-    std::ranges::sort(files);
+    if (maxFile.empty()) return "<No screenshots in " + maxDay + ">";
 
-    return files.back();
+    return maxFile;
 }
 
 size_t filesize(std::string_view path) {
