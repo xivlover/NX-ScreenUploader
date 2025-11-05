@@ -8,7 +8,7 @@
 #include "utils.hpp"
 
 bool Config::refresh() {
-    INIReader reader("sdmc:/config/sys-screen-capture-uploader/config.ini");
+    INIReader reader("sdmc:/config/sys-screen-uploader/config.ini");
 
     if (const int parseError = reader.ParseError(); parseError != 0) {
         Logger::get().error()

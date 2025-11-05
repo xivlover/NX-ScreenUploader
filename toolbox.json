@@ -1,5 +1,5 @@
 {
-    "name"  : "sys-screen-capture-uploader",
-    "tid"   : "0100000000000333",
+    "name"  : "sys-screen-uploader",
+    "tid"   : "420000000001BF52",
     "requires_reboot": false
 }

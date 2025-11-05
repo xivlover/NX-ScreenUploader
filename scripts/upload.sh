@@ -7,8 +7,8 @@ fi
 
 cd build
 ftp -inv ${SWITCH_HOSTNAME} 5000 << EOF
-cd /atmosphere/contents/0100000000000333
+cd /atmosphere/contents/420000000001BF52
 delete exefs.nsp
-put sys-screen-capture-uploader.nsp
-rename sys-screen-capture-uploader.nsp exefs.nsp
+put screen-uploader.nsp
+rename screen-uploader.nsp exefs.nsp
 EOF

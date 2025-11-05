@@ -1,7 +1,7 @@
 #ifndef INCLUDE_GUARD
 #define INCLUDE_GUARD
 
-#define APP_TITLE "sys-screen-capture-uploader"
+#define APP_TITLE "screen-uploader"
 #define APP_AUTHOR "musse"
 #define APP_VERSION  "0.0.2"
 #define VERSION_MAJOR "0"

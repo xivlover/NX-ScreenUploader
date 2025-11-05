@@ -18,7 +18,7 @@ enum class LogLevel : uint8_t {
 };
 
 inline constexpr std::string_view LOGFILE_PATH =
-    "sdmc:/config/sys-screen-capture-uploader/logs.txt";
+    "sdmc:/config/sys-screen-uploader/logs.txt";
 
 class Logger {
    public:
