@@ -249,11 +249,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
                 if (!sent) {
                     Logger::get().error()
                         << "Unable to send file after " << maxRetries
-                        << " retries" << std::endl;
-                } else {
-                    // 成功发送后更新路径
-                    lastItem = std::move(tmpItem);
+                        << " retries, skipping..." << std::endl;
                 }
+
+                // 无论成功与否都更新lastItem，避免无限重试同一文件
+                lastItem = std::move(tmpItem);
             }
 
             Logger::get().close();
