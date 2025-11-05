@@ -128,7 +128,8 @@ void initLogger(bool truncate) {
 
     constexpr std::string_view separator = "=============================";
     auto& logger = Logger::get().none();
-    logger << separator << std::endl
+    logger << std::endl
+           << separator << std::endl
            << "sys-screen-uploader v" << APP_VERSION << " is starting..."
            << std::endl
            << separator << std::endl;
