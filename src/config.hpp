@@ -6,6 +6,12 @@
 #include <string_view>
 #include <unordered_map>
 
+enum class UploadMode : uint8_t {
+    Compressed = 0,  // 只上传压缩图
+    Original = 1,    // 只上传原图
+    Both = 2         // 上传两者（先压缩，失败则原图）
+};
+
 class Config {
    public:
     static Config& get() noexcept {
@@ -22,6 +28,9 @@ class Config {
     [[nodiscard]] constexpr bool keepLogs() const noexcept {
         return m_keepLogs;
     }
+    [[nodiscard]] constexpr UploadMode getUploadMode() const noexcept {
+        return m_uploadMode;
+    }
 
     bool error{false};
 
@@ -35,6 +44,7 @@ class Config {
     bool m_uploadScreenshots{true};
     bool m_uploadMovies{true};
     bool m_keepLogs{false};
+    UploadMode m_uploadMode{UploadMode::Compressed};  // 默认使用压缩模式
     std::unordered_map<std::string, bool> m_titleScreenshots;
     std::unordered_map<std::string, bool> m_titleMovies;
 };

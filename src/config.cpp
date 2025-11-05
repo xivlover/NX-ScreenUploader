@@ -25,6 +25,19 @@ bool Config::refresh() {
     m_uploadMovies = reader.GetBoolean("general", "upload_movies", true);
     m_keepLogs = reader.GetBoolean("general", "keep_logs", false);
 
+    // 读取上传模式配置: compressed, original, both (默认为compressed)
+    const std::string uploadModeStr =
+        reader.Get("general", "upload_mode", "compressed");
+    if (uploadModeStr == "compressed") {
+        m_uploadMode = UploadMode::Compressed;
+    } else if (uploadModeStr == "original") {
+        m_uploadMode = UploadMode::Original;
+    } else if (uploadModeStr == "both") {
+        m_uploadMode = UploadMode::Both;
+    } else {
+        m_uploadMode = UploadMode::Compressed;  // 默认值
+    }
+
     if (reader.HasSection("title_screenshots")) {
         const auto keys = reader.Keys("title_screenshots");
         m_titleScreenshots.reserve(keys.size());

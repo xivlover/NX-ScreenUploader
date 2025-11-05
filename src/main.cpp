@@ -198,10 +198,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     // 获取初始的最后一个文件（用于对比）
     std::string lastItem = getLastAlbumItem();
     Logger::get().info() << "Current last item: " << lastItem << std::endl;
+
+    // 根据配置确定上传模式
+    const UploadMode uploadMode = Config::get().getUploadMode();
+    const char* modeStr = uploadMode == UploadMode::Compressed ? "compressed"
+                          : uploadMode == UploadMode::Original ? "original"
+                                                               : "both";
+    Logger::get().info() << "Upload mode: " << modeStr << std::endl;
     Logger::get().close();
 
     constexpr std::string_view separator = "=============================";
-    constexpr std::array<bool, 2> compressionModes{true, false};
     constexpr int maxRetries = 3;
     constexpr u64 sleepDuration = 1'000'000'000ULL;  // 1秒
 
@@ -239,16 +245,39 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
                                << "Filesize: " << fs << std::endl;
 
                         bool sent = false;
-                        for (const bool compression : compressionModes) {
-                            if (sent) break;
 
-                            for (int retry = 0; retry < maxRetries; ++retry) {
-                                sent =
-                                    sendFileToServer(tmpItem, fs, compression);
-                                if (sent) {
-                                    break;
+                        // 根据配置模式决定上传策略
+                        switch (uploadMode) {
+                            case UploadMode::Compressed:
+                                // 只尝试压缩上传
+                                for (int retry = 0; retry < maxRetries && !sent;
+                                     ++retry) {
+                                    sent = sendFileToServer(tmpItem, fs, true);
                                 }
-                            }
+                                break;
+
+                            case UploadMode::Original:
+                                // 只尝试原图上传
+                                for (int retry = 0; retry < maxRetries && !sent;
+                                     ++retry) {
+                                    sent = sendFileToServer(tmpItem, fs, false);
+                                }
+                                break;
+
+                            case UploadMode::Both:
+                                // 先尝试压缩，失败则尝试原图
+                                for (int retry = 0; retry < maxRetries && !sent;
+                                     ++retry) {
+                                    sent = sendFileToServer(tmpItem, fs, true);
+                                }
+                                if (!sent) {
+                                    for (int retry = 0;
+                                         retry < maxRetries && !sent; ++retry) {
+                                        sent = sendFileToServer(tmpItem, fs,
+                                                                false);
+                                    }
+                                }
+                                break;
                         }
 
                         if (!sent) {
