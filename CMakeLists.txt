@@ -50,6 +50,10 @@ set(APP_VERSION
 
 set(USE_CPP_20 ON)
 
+# Enable LTO (Link Time Optimization) for better optimization
+# Set to OFF to disable LTO
+option(ENABLE_LTO "Enable Link Time Optimization (LTO)" ON)
+
 if (NOT DEFINED CMAKE_BUILD_TYPE_INIT)
     set(CMAKE_BUILD_TYPE_INIT Release)
 endif ()
@@ -64,6 +68,20 @@ endif ()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     include(clang-utils)
+endif ()
+
+# Apply LTO settings if enabled
+if (ENABLE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output)
+    if (ipo_supported)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        cmake_info("LTO (Link Time Optimization) enabled")
+    else ()
+        cmake_warn("LTO is not supported by the compiler: ${ipo_output}")
+    endif ()
+else ()
+    cmake_info("LTO (Link Time Optimization) disabled")
 endif ()
 
 include(nx-utils)
