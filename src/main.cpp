@@ -183,18 +183,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     Logger::get().info() << "Mounted " << (storage ? "SD" : "NAND")
                          << " storage" << std::endl;
 
-    // 获取初始文件计数
-    u64 lastFileCount = 0;
-    rc = capsaGetAlbumFileCount(storage, &lastFileCount);
-    if (!R_SUCCEEDED(rc)) {
-        Logger::get().error() << "capsaGetAlbumFileCount() failed: " << rc
-                              << ", exiting..." << std::endl;
-        return 0;
-    }
-
-    Logger::get().info() << "Initial album file count: " << lastFileCount
-                         << std::endl;
-
     // 获取初始的最后一个文件（用于对比）
     std::string lastItem = getLastAlbumItem();
     Logger::get().info() << "Current last item: " << lastItem << std::endl;
@@ -212,88 +200,63 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     constexpr u64 sleepDuration = 1'000'000'000ULL;  // 1秒
 
     while (true) {
-        u64 currentFileCount = 0;
-        rc = capsaGetAlbumFileCount(storage, &currentFileCount);
+        std::string tmpItem = getLastAlbumItem();
 
-        if (R_SUCCEEDED(rc)) {
-            // 处理文件被删除的情况（数量减少）
-            if (currentFileCount < lastFileCount) {
-                Logger::get().info()
-                    << "File count decreased: " << lastFileCount << " -> "
-                    << currentFileCount << " (files deleted)" << std::endl;
-                lastFileCount = currentFileCount;
-                // 更新lastItem以反映当前状态
-                lastItem = getLastAlbumItem();
-                Logger::get().close();
-            }
-            // 处理新增截图的情况（数量增加）
-            else if (currentFileCount > lastFileCount) {
-                Logger::get().info()
-                    << "File count increased: " << lastFileCount << " -> "
-                    << currentFileCount << std::endl;
+        if (lastItem < tmpItem) {
+            const size_t fs = filesize(tmpItem);
 
-                // 使用文件系统遍历获取实际的新文件路径
-                std::string tmpItem = getLastAlbumItem();
+            if (fs > 0) {
+                auto& logger = Logger::get().info();
+                logger << separator << std::endl
+                       << "New item found: " << tmpItem << std::endl
+                       << "Filesize: " << fs << std::endl;
 
-                if (lastItem < tmpItem) {
-                    const size_t fs = filesize(tmpItem);
+                bool sent = false;
 
-                    if (fs > 0) {
-                        auto& logger = Logger::get().info();
-                        logger << separator << std::endl
-                               << "New item found: " << tmpItem << std::endl
-                               << "Filesize: " << fs << std::endl;
-
-                        bool sent = false;
-
-                        // 根据配置模式决定上传策略
-                        switch (uploadMode) {
-                            case UploadMode::Compressed:
-                                // 只尝试压缩上传
-                                for (int retry = 0; retry < maxRetries && !sent;
-                                     ++retry) {
-                                    sent = sendFileToServer(tmpItem, fs, true);
-                                }
-                                break;
-
-                            case UploadMode::Original:
-                                // 只尝试原图上传
-                                for (int retry = 0; retry < maxRetries && !sent;
-                                     ++retry) {
-                                    sent = sendFileToServer(tmpItem, fs, false);
-                                }
-                                break;
-
-                            case UploadMode::Both:
-                                // 先尝试压缩，失败则尝试原图
-                                for (int retry = 0; retry < maxRetries && !sent;
-                                     ++retry) {
-                                    sent = sendFileToServer(tmpItem, fs, true);
-                                }
-                                if (!sent) {
-                                    for (int retry = 0;
-                                         retry < maxRetries && !sent; ++retry) {
-                                        sent = sendFileToServer(tmpItem, fs,
-                                                                false);
-                                    }
-                                }
-                                break;
+                // 根据配置模式决定上传策略
+                switch (uploadMode) {
+                    case UploadMode::Compressed:
+                        // 只尝试压缩上传
+                        for (int retry = 0; retry < maxRetries && !sent;
+                             ++retry) {
+                            sent = sendFileToServer(tmpItem, fs, true);
                         }
+                        break;
 
+                    case UploadMode::Original:
+                        // 只尝试原图上传
+                        for (int retry = 0; retry < maxRetries && !sent;
+                             ++retry) {
+                            sent = sendFileToServer(tmpItem, fs, false);
+                        }
+                        break;
+
+                    case UploadMode::Both:
+                        // 先尝试压缩，失败则尝试原图
+                        for (int retry = 0; retry < maxRetries && !sent;
+                             ++retry) {
+                            sent = sendFileToServer(tmpItem, fs, true);
+                        }
                         if (!sent) {
-                            Logger::get().error()
-                                << "Unable to send file after " << maxRetries
-                                << " retries" << std::endl;
-                        } else {
-                            // 只有成功发送后才更新计数和路径
-                            lastItem = std::move(tmpItem);
-                            lastFileCount = currentFileCount;
+                            for (int retry = 0; retry < maxRetries && !sent;
+                                 ++retry) {
+                                sent = sendFileToServer(tmpItem, fs, false);
+                            }
                         }
-                    }
+                        break;
                 }
 
-                Logger::get().close();
+                if (!sent) {
+                    Logger::get().error()
+                        << "Unable to send file after " << maxRetries
+                        << " retries" << std::endl;
+                } else {
+                    // 成功发送后更新路径
+                    lastItem = std::move(tmpItem);
+                }
             }
+
+            Logger::get().close();
         }
 
         svcSleepThread(sleepDuration);
