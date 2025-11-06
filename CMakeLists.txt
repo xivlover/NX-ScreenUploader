@@ -88,7 +88,7 @@ include(src/CMakeLists.txt)
 target_link_libraries(${HOMEBREW_APP}.elf ${CURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${ZLIB_LIBRARIES} switch::libnx)
 set_target_properties(${HOMEBREW_APP}.elf PROPERTIES
         LINKER_LANGUAGE CXX # Replace this with C if you have C source files
-        LINK_FLAGS "-specs=${LIBNX}/switch.specs -Wl,-no-as-needed -Wl,-Map,.map")
+        LINK_FLAGS "-specs=${LIBNX}/switch.specs -Wl,--as-needed -Wl,--gc-sections -Wl,-Map,.map")
 
 #build_switch_binaries(test.elf)
 #build_switch_sysmodule(${HOMEBREW_APP}.elf)
