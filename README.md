@@ -38,7 +38,7 @@ You can install [`devkitpro-pacman`](https://github.com/devkitPro/pacman/release
 
 ```bash
 sudo dkp-pacman -Syu
-sudo dkp-pacman -S devkitA64 switch-dev switch-curl switch-zlib switch-mbedtls
+sudo dkp-pacman -S devkitA64 switch-dev switch-curl switch-zlib
 ```
 
 Check the following links for additional details on how to set up your environment for Switch homebrew development:
