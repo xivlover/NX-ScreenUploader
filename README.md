@@ -48,17 +48,23 @@ Check the following links for additional details on how to set up your environme
 
 ### Build
 
-To build the project, you also need [`CMake`](https://cmake.org/). Create a `build` directory on the project root, `cd` into it and run:
+> To build the project, you also need [`CMake`](https://cmake.org/).
 
 ```bash
+bash scripts/build.sh
+bash scripts/release.sh
+```
+
+Or manually:
+
+```bash
+mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=../devkita64-libnx.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 ```
 
-You should now have a `Makefile` inside the `build` directory and can simply run `make` to build the project. The relevant binary file is `sys-screen-capture-uploader.nsp`.
+You should now have a `Makefile` inside the `build` directory and can simply run `make` to build the project. The relevant binary file is `NX-ScreenUploader.nsp`.
 
 After building the project, you can generate a release by running `scripts/release.sh` from the repository root. This will create the correct directory structure that should be copied to the root of your SD card and also a zip file containing all these files.
-
-If you have an FTP server running on your Switch (such as [sys-ftpd-light](https://github.com/cathery/sys-ftpd-light)), you can run `scripts/upload.sh` from the repository root to update the binary over the network so that development is faster. Make sure to set the `SWITCH_HOSTNAME` env var before running this script.
 
 ## Credits
 

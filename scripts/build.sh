@@ -4,9 +4,10 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BUILD_DIR="${SCRIPT_DIR}/build"
+PROJECT_DIR=$(dirname "${SCRIPT_DIR}")
+BUILD_DIR="${PROJECT_DIR}/build"
 
-# Ensure build directory exists
+# ensure build directory exists
 mkdir -p "$BUILD_DIR"
 
 # Build

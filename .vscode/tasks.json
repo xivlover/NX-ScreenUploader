@@ -56,6 +56,17 @@
                 "reveal": "always",
                 "panel": "shared"
             }
+        },
+        {
+            "label": "Release",
+            "type": "shell",
+            "command": "bash ${workspaceFolder}/scripts/release.sh",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
         }
     ]
 }
