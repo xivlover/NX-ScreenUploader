@@ -1,5 +1,5 @@
 {
-    "name"  : "sys-screen-uploader",
+    "name"  : "NX-ScreenUploader",
     "tid"   : "420000000001BF52",
     "requires_reboot": false
 }

@@ -130,15 +130,14 @@ void initLogger(bool truncate) {
     auto& logger = Logger::get().none();
     logger << std::endl
            << separator << std::endl
-           << "sys-screen-uploader v" << APP_VERSION << " is starting..."
+           << APP_TITLE " v" << APP_VERSION << " is starting..."
            << std::endl
            << separator << std::endl;
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     constexpr std::string_view configDir = "sdmc:/config";
-    constexpr std::string_view appConfigDir =
-        "sdmc:/config/sys-screen-uploader";
+    constexpr std::string_view appConfigDir = "sdmc:/config/" APP_TITLE;
 
     mkdir(configDir.data(), 0700);
     mkdir(appConfigDir.data(), 0700);

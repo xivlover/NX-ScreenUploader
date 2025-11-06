@@ -5,10 +5,13 @@ if [[ -z ${SWITCH_HOSTNAME} ]]; then
     exit 1
 fi
 
+APP_TITLE="NX-ScreenUploader"
+APP_TITLE_ID="420000000001BF52"
+
 cd build
 ftp -inv ${SWITCH_HOSTNAME} 5000 << EOF
-cd /atmosphere/contents/420000000001BF52
+cd /atmosphere/contents/${APP_TITLE_ID}
 delete exefs.nsp
-put screen-uploader.nsp
-rename screen-uploader.nsp exefs.nsp
+put ${APP_TITLE}.nsp
+rename ${APP_TITLE}.nsp exefs.nsp
 EOF

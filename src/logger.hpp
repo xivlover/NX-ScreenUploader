@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string_view>
 
+#include "project.h"
+
 #ifdef DEBUG
 #undef DEBUG
 #endif
@@ -18,7 +20,7 @@ enum class LogLevel : uint8_t {
 };
 
 inline constexpr std::string_view LOGFILE_PATH =
-    "sdmc:/config/sys-screen-uploader/logs.txt";
+    "sdmc:/config/" APP_TITLE "/logs.txt";
 
 class Logger {
    public:

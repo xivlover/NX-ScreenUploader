@@ -5,10 +5,11 @@
 #include <iostream>
 
 #include "logger.hpp"
+#include "project.h"
 #include "utils.hpp"
 
 bool Config::refresh() {
-    INIReader reader("sdmc:/config/sys-screen-uploader/config.ini");
+    INIReader reader("sdmc:/config/" APP_TITLE "/config.ini");
 
     if (const int parseError = reader.ParseError(); parseError != 0) {
         Logger::get().error()
