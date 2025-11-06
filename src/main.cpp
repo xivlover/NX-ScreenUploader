@@ -14,33 +14,41 @@
 #include "upload.hpp"
 #include "utils.hpp"
 
-#define INNER_HEAP_SIZE 0x50000
+#define INNER_HEAP_SIZE 0x40'000
 
 extern "C" {
+
 extern u32 __start__;
 
+// Sysmodules should not use applet*.
 u32 __nx_applet_type = AppletType_None;
 
-size_t nx_inner_heap_size = INNER_HEAP_SIZE;
-char nx_inner_heap[INNER_HEAP_SIZE];
+// Sysmodules will normally only want to use one FS session.
+u32 __nx_fs_num_sessions = 1;
 
 void __libnx_init_time(void);
 void __libnx_initheap(void);
 void __appInit(void);
 void __appExit(void);
 
-// we override libnx internals to do a minimal init
+// Newlib heap configuration function (makes malloc/free work).
 void __libnx_initheap(void) {
-    void* addr = nx_inner_heap;
-    size_t size = nx_inner_heap_size;
+    static u8 inner_heap[INNER_HEAP_SIZE];
+    extern void* fake_heap_start;
+    extern void* fake_heap_end;
 
-    extern char* fake_heap_start;
-    extern char* fake_heap_end;
-
-    // setup newlib fake heap
-    fake_heap_start = (char*)addr;
-    fake_heap_end = (char*)addr + size;
+    // Configure the newlib heap.
+    fake_heap_start = inner_heap;
+    fake_heap_end = inner_heap + sizeof(inner_heap);
 }
+
+#define TCP_TX_BUF_SIZE (1024 * 4)
+#define TCP_RX_BUF_SIZE (1024 * 4)
+#define TCP_TX_BUF_SIZE_MAX (1024 * 64)
+#define TCP_RX_BUF_SIZE_MAX (1024 * 64)
+#define UDP_TX_BUF_SIZE (0)
+#define UDP_RX_BUF_SIZE (0)
+#define SB_EFFICIENCY (1)
 
 void __appInit(void) {
     Result rc;
@@ -70,15 +78,15 @@ void __appInit(void) {
         fatalThrow(rc);
     }
     SocketInitConfig sockConf = {
-        .tcp_tx_buf_size = 0x800,
-        .tcp_rx_buf_size = 0x1000,
-        .tcp_tx_buf_max_size = 0x2EE0,
-        .tcp_rx_buf_max_size = 0x2EE0,
+        .tcp_tx_buf_size = TCP_TX_BUF_SIZE,
+        .tcp_rx_buf_size = TCP_RX_BUF_SIZE,
+        .tcp_tx_buf_max_size = TCP_TX_BUF_SIZE_MAX,
+        .tcp_rx_buf_max_size = TCP_RX_BUF_SIZE_MAX,
 
-        .udp_tx_buf_size = 0x0,
-        .udp_rx_buf_size = 0x0,
+        .udp_tx_buf_size = UDP_TX_BUF_SIZE,
+        .udp_rx_buf_size = UDP_RX_BUF_SIZE,
 
-        .sb_efficiency = 4,
+        .sb_efficiency = SB_EFFICIENCY,
     };
     rc = socketInitialize(&sockConf);
     if (R_FAILED(rc)) {
@@ -130,8 +138,7 @@ void initLogger(bool truncate) {
     auto& logger = Logger::get().none();
     logger << std::endl
            << separator << std::endl
-           << APP_TITLE " v" << APP_VERSION << " is starting..."
-           << std::endl
+           << APP_TITLE " v" << APP_VERSION << " is starting..." << std::endl
            << separator << std::endl;
 }
 
