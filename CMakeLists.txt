@@ -48,12 +48,6 @@ set(VERSION_MICRO 0)
 set(APP_VERSION
         "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO}")
 
-set(USE_CPP_20 ON)
-
-# Enable LTO (Link Time Optimization) for better optimization
-# Set to OFF to disable LTO
-option(ENABLE_LTO "Enable Link Time Optimization (LTO)" ON)
-
 if (NOT DEFINED CMAKE_BUILD_TYPE_INIT)
     set(CMAKE_BUILD_TYPE_INIT Release)
 endif ()

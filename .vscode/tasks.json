@@ -21,7 +21,7 @@
         {
             "label": "CMake Configure",
             "type": "shell",
-            "command": "cd ${workspaceFolder}/build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../devkita64-libnx.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+            "command": "mkdir -p ${workspaceFolder}/build && cd ${workspaceFolder}/build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../devkita64-libnx.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
             "group": "build",
             "presentation": {
                 "echo": true,
@@ -49,7 +49,7 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "cd ${workspaceFolder}/build && make clean",
+            "command": "rm -r ${workspaceFolder}/build",
             "group": "build",
             "presentation": {
                 "echo": true,
