@@ -1,11 +1,8 @@
 #include <curl/curl.h>
 #include <dirent.h>
-#include <netinet/in.h>
 #include <switch.h>
 
-#include <array>
 #include <iostream>
-#include <string>
 #include <string_view>
 
 #include "config.hpp"
@@ -34,9 +31,6 @@ bool __nx_fsdev_support_cwd = false;
 u32 __nx_nv_transfermem_size = 0;  // We don't use NV services
 
 void __libnx_init_time(void);
-void __libnx_initheap(void);
-void __appInit(void);
-void __appExit(void);
 
 // Newlib heap configuration function (makes malloc/free work).
 void __libnx_initheap(void) {
@@ -46,23 +40,25 @@ void __libnx_initheap(void) {
     extern char* fake_heap_end;
 
     fake_heap_start = &g_innerheap[0];
-    fake_heap_end   = &g_innerheap[sizeof g_innerheap];
+    fake_heap_end = &g_innerheap[sizeof g_innerheap];
 }
 
-#define TCP_TX_BUF_SIZE (1024 * 2)
-#define TCP_RX_BUF_SIZE (1024 * 2)
-#define TCP_TX_BUF_SIZE_MAX (1024 * 16)
-#define TCP_RX_BUF_SIZE_MAX (1024 * 16)
+#define TCP_TX_BUF_SIZE (1024 * 4)
+#define TCP_RX_BUF_SIZE (1024 * 4)
+#define TCP_TX_BUF_SIZE_MAX (1024 * 64)
+#define TCP_RX_BUF_SIZE_MAX (1024 * 64)
 #define UDP_TX_BUF_SIZE (0)
 #define UDP_RX_BUF_SIZE (0)
 #define SB_EFFICIENCY (1)
 
 void __appInit(void) {
     Result rc;
+
     rc = smInitialize();
     if (R_FAILED(rc)) {
         fatalThrow(rc);
     }
+
     rc = setsysInitialize();
     if (R_SUCCEEDED(rc)) {
         SetSysFirmwareVersion fw;
@@ -76,14 +72,7 @@ void __appInit(void) {
     } else {
         fatalThrow(rc);
     }
-    rc = pmdmntInitialize();
-    if (R_FAILED(rc)) {
-        fatalThrow(rc);
-    }
-    rc = nsInitialize();
-    if (R_FAILED(rc)) {
-        fatalThrow(rc);
-    }
+
     SocketInitConfig sockConf = {
         .tcp_tx_buf_size = TCP_TX_BUF_SIZE,
         .tcp_rx_buf_size = TCP_RX_BUF_SIZE,
@@ -96,11 +85,6 @@ void __appInit(void) {
         .sb_efficiency = SB_EFFICIENCY,
     };
     rc = socketInitialize(&sockConf);
-    if (R_FAILED(rc)) {
-        fatalThrow(rc);
-    }
-
-    rc = pminfoInitialize();
     if (R_FAILED(rc)) {
         fatalThrow(rc);
     }
@@ -120,6 +104,8 @@ void __appInit(void) {
         fatalThrow(rc);
     }
 
+    __libnx_init_time();
+
     fsdevMountSdmc();
 }
 
@@ -128,9 +114,6 @@ void __appExit(void) {
     timeExit();
     fsExit();
     capsaExit();
-    pminfoExit();
-    pmdmntExit();
-    nsExit();
     socketExit();
     smExit();
 }
@@ -140,6 +123,8 @@ void initLogger(bool truncate) {
     if (truncate) {
         Logger::get().truncate();
     }
+
+    Logger::get().setLevel(LogLevel::DEBUG);
 
     constexpr std::string_view separator = "=============================";
     auto& logger = Logger::get().none();
@@ -165,7 +150,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
         initLogger(true);
     }
 
-    curl_global_init(CURL_GLOBAL_ALL);
+    curl_global_init(CURL_GLOBAL_DEFAULT);
 
     CapsAlbumStorage storage;
     FsFileSystem imageFs;
