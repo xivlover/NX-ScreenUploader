@@ -3,10 +3,7 @@
 #include <sys/stat.h>
 
 #include <algorithm>
-#include <array>
 #include <ranges>
-#include <string>
-#include <vector>
 
 namespace {
 constexpr std::string_view ALBUM_PATH = "img:/";

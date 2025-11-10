@@ -24,8 +24,6 @@ u32 __nx_applet_type = AppletType_None;
 
 // Minimize fs resource usage for memory optimization
 u32 __nx_fs_num_sessions = 1;
-u32 __nx_fsdev_direntry_cache_size = 1;
-bool __nx_fsdev_support_cwd = false;
 
 // Minimize system resource allocation
 u32 __nx_nv_transfermem_size = 0;  // We don't use NV services
@@ -73,7 +71,7 @@ void __appInit(void) {
         fatalThrow(rc);
     }
 
-    SocketInitConfig sockConf = {
+    constexpr SocketInitConfig socket_config = {
         .tcp_tx_buf_size = TCP_TX_BUF_SIZE,
         .tcp_rx_buf_size = TCP_RX_BUF_SIZE,
         .tcp_tx_buf_max_size = TCP_TX_BUF_SIZE_MAX,
@@ -84,7 +82,8 @@ void __appInit(void) {
 
         .sb_efficiency = SB_EFFICIENCY,
     };
-    rc = socketInitialize(&sockConf);
+
+    rc = socketInitialize(&socket_config);
     if (R_FAILED(rc)) {
         fatalThrow(rc);
     }
@@ -107,9 +106,12 @@ void __appInit(void) {
     __libnx_init_time();
 
     fsdevMountSdmc();
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
 }
 
 void __appExit(void) {
+    curl_global_cleanup();
     fsdevUnmountAll();
     timeExit();
     fsExit();
@@ -124,7 +126,7 @@ void initLogger(bool truncate) {
         Logger::get().truncate();
     }
 
-    Logger::get().setLevel(LogLevel::DEBUG);
+    // Logger::get().setLevel(LogLevel::DEBUG);
 
     constexpr std::string_view separator = "=============================";
     auto logger = Logger::get().none();
@@ -149,8 +151,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     if (!Config::get().keepLogs()) {
         initLogger(true);
     }
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
 
     CapsAlbumStorage storage;
     FsFileSystem imageFs;
@@ -205,9 +205,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 
     while (true) {
         std::string tmpItem = getLastAlbumItem();
-
-        // auto& logger = Logger::get().info();
-        // logger << "ping" << std::endl;
 
         if (lastItem < tmpItem) {
             const size_t fs = filesize(tmpItem);
