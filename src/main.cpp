@@ -41,13 +41,13 @@ void __libnx_initheap(void) {
     fake_heap_end = &g_innerheap[sizeof g_innerheap];
 }
 
-#define TCP_TX_BUF_SIZE (1024 * 4)
-#define TCP_RX_BUF_SIZE (1024 * 4)
-#define TCP_TX_BUF_SIZE_MAX (1024 * 64)
-#define TCP_RX_BUF_SIZE_MAX (1024 * 64)
+#define TCP_TX_BUF_SIZE (0x800)
+#define TCP_RX_BUF_SIZE (0x1000)
+#define TCP_TX_BUF_SIZE_MAX (0x2EE0)
+#define TCP_RX_BUF_SIZE_MAX (0x2EE0)
 #define UDP_TX_BUF_SIZE (0)
 #define UDP_RX_BUF_SIZE (0)
-#define SB_EFFICIENCY (1)
+#define SB_EFFICIENCY (4)
 
 void __appInit(void) {
     Result rc;

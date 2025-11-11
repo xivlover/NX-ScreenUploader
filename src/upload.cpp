@@ -135,8 +135,8 @@ bool sendFileToServer(std::string_view path, size_t size, bool compression) {
     curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
     // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
     // Reduced buffer sizes from 8KB each to 4KB each to save memory
-    curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 0x1000L);
-    curl_easy_setopt(curl, CURLOPT_UPLOAD_BUFFERSIZE, 0x1000L);
+    curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 0x2000L);
+    curl_easy_setopt(curl, CURLOPT_UPLOAD_BUFFERSIZE, 0x2000L);
 
     const CURLcode res = curl_easy_perform(curl);
     std::fclose(f);
