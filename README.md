@@ -29,7 +29,7 @@ To use this homebrew, you must create your own Telegram bot. It will send your S
 After getting these two values, you are ready to configure the homebrew and install it to your Switch:
 
 1. Download [the latest release](https://github.com/sakarie9/NX-ScreenUploader) and extract it somewhere.
-2. Open `config/sys-screen-uploader/config.ini` and set `telegram_bot_token` and `telegram_chat_id` to the values you have noted down.
+2. Open `config/NX-ScreenUploader/config.ini` and set `telegram_bot_token` and `telegram_chat_id` to the values you have noted down.
 3. Copy the release contents to the root of your SD card.
 
 ## Development
