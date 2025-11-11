@@ -52,9 +52,9 @@ bool Config::refresh() {
         m_uploadMode = UploadMode::Compressed;  // 默认值
     }
 
-    // 读取检查间隔配置（秒），默认1秒，最低1秒
+    // 读取检查间隔配置（秒），默认3秒，最低1秒
     m_checkIntervalSeconds =
-        (int)ini_getl("general", "check_interval", 1, CONFIG_PATH);
+        (int)ini_getl("general", "check_interval", 3, CONFIG_PATH);
     if (m_checkIntervalSeconds < 1) {
         m_checkIntervalSeconds = 1;
     }
