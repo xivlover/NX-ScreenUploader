@@ -25,11 +25,6 @@ u32 __nx_applet_type = AppletType_None;
 // Minimize fs resource usage for memory optimization
 u32 __nx_fs_num_sessions = 1;
 
-// Minimize system resource allocation
-u32 __nx_nv_transfermem_size = 0;  // We don't use NV services
-
-void __libnx_init_time(void);
-
 // Newlib heap configuration function (makes malloc/free work).
 void __libnx_initheap(void) {
     static char g_innerheap[INNER_HEAP_SIZE];
@@ -98,13 +93,6 @@ void __appInit(void) {
         fatalThrow(rc);
     }
 
-    rc = timeInitialize();
-    if (R_FAILED(rc)) {
-        fatalThrow(rc);
-    }
-
-    __libnx_init_time();
-
     fsdevMountSdmc();
 
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -113,7 +101,6 @@ void __appInit(void) {
 void __appExit(void) {
     curl_global_cleanup();
     fsdevUnmountAll();
-    timeExit();
     fsExit();
     capsaExit();
     socketExit();

@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cstdio>
-#include <ctime>
 #include <string_view>
 
 #include "project.h"
@@ -186,15 +185,6 @@ class Logger {
         }
     }
 
-    static const char* get_time() {
-        static std::array<char, 32> buf{};
-        u64 now;
-        timeGetCurrentTime(TimeType_LocalSystemClock, &now);
-        const time_t nowt = now;
-        std::strftime(buf.data(), buf.size(), "%F %T UTC", std::gmtime(&nowt));
-        return buf.data();
-    }
-
     static const char* getPrefix(LogLevel lvl) {
         static std::array<char, 64> buffer{};
 
@@ -214,8 +204,7 @@ class Logger {
                 break;
         }
 
-        std::snprintf(buffer.data(), buffer.size(), "%s[%s] ", level_str,
-                      get_time());
+        std::snprintf(buffer.data(), buffer.size(), "%s", level_str);
         return buffer.data();
     }
 
