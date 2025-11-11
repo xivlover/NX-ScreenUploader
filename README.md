@@ -11,6 +11,8 @@ This project was forked from [bakatrouble/sys-screenuploader](https://github.com
 - Supports uploading in compressed (photo/video) or original (document) or both modes
 - Custom Telegram Bot API URL support (for reverse proxy)
 - Custom new screen capture check interval support
+- Less memory usage compared to the original project (from ~1.852 MB to ~1.336 MB)
+- No more fatal crashes when opening nxmenu in applet mode alongside other sysmodules
 
 ## Requirements
 
