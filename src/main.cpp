@@ -11,9 +11,18 @@
 #include "upload.hpp"
 #include "utils.hpp"
 
+namespace {
 // Reduce heap size for memory optimization
 // 0x40000 (256KB) will oom, 0x50000 (320KB) is minimum stable
-#define INNER_HEAP_SIZE 0x50000
+constexpr size_t INNER_HEAP_SIZE = 0x50000;
+constexpr size_t TCP_TX_BUF_SIZE = 0x800;
+constexpr size_t TCP_RX_BUF_SIZE = 0x1000;
+constexpr size_t TCP_TX_BUF_SIZE_MAX = 0x2EE0;
+constexpr size_t TCP_RX_BUF_SIZE_MAX = 0x2EE0;
+constexpr size_t UDP_TX_BUF_SIZE = 0;
+constexpr size_t UDP_RX_BUF_SIZE = 0;
+constexpr size_t SB_EFFICIENCY = 4;
+}  // namespace
 
 extern "C" {
 
@@ -35,14 +44,6 @@ void __libnx_initheap(void) {
     fake_heap_start = &g_innerheap[0];
     fake_heap_end = &g_innerheap[sizeof g_innerheap];
 }
-
-#define TCP_TX_BUF_SIZE (0x800)
-#define TCP_RX_BUF_SIZE (0x1000)
-#define TCP_TX_BUF_SIZE_MAX (0x2EE0)
-#define TCP_RX_BUF_SIZE_MAX (0x2EE0)
-#define UDP_TX_BUF_SIZE (0)
-#define UDP_RX_BUF_SIZE (0)
-#define SB_EFFICIENCY (4)
 
 void __appInit(void) {
     Result rc;
@@ -172,12 +173,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     std::string lastItem = getLastAlbumItem();
     Logger::get().info() << "Current last item: " << lastItem << std::endl;
 
-    // Determine upload mode based on configuration
-    const UploadMode uploadMode = Config::get().getUploadMode();
-    const char* modeStr = uploadMode == UploadMode::Compressed ? "compressed"
-                          : uploadMode == UploadMode::Original ? "original"
-                                                               : "both";
-    Logger::get().info() << "Upload mode: " << modeStr << std::endl;
+    // Determine Telegram upload mode based on configuration
+    const UploadMode telegramUploadMode = Config::get().getTelegramUploadMode();
+    const char* modeStr =
+        telegramUploadMode == UploadMode::Compressed ? "compressed"
+        : telegramUploadMode == UploadMode::Original ? "original"
+                                                     : "both";
+    Logger::get().info() << "Telegram upload mode: " << modeStr << std::endl;
 
     // Get check interval configuration
     const int checkInterval = Config::get().getCheckIntervalSeconds();
@@ -202,45 +204,76 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
                        << "New item found: " << tmpItem << std::endl
                        << "Filesize: " << fs << std::endl;
 
-                bool sent = false;
+                bool anySuccess = false;
 
-                // Decide upload strategy based on configured mode
-                switch (uploadMode) {
-                    case UploadMode::Compressed:
-                        // Try compressed upload only
-                        for (int retry = 0; retry < maxRetries && !sent;
-                             ++retry) {
-                            sent = sendFileToServer(tmpItem, fs, true);
-                        }
-                        break;
+                // Upload to enabled destinations in sequence
+                if (Config::get().telegramEnabled()) {
+                    bool sent = false;
 
-                    case UploadMode::Original:
-                        // Try original upload only
-                        for (int retry = 0; retry < maxRetries && !sent;
-                             ++retry) {
-                            sent = sendFileToServer(tmpItem, fs, false);
-                        }
-                        break;
-
-                    case UploadMode::Both:
-                        // Try compressed first; if it fails, try original
-                        for (int retry = 0; retry < maxRetries && !sent;
-                             ++retry) {
-                            sent = sendFileToServer(tmpItem, fs, true);
-                        }
-                        if (!sent) {
+                    // Decide upload strategy based on configured mode
+                    switch (telegramUploadMode) {
+                        case UploadMode::Compressed:
+                            // Try compressed upload only
                             for (int retry = 0; retry < maxRetries && !sent;
                                  ++retry) {
-                                sent = sendFileToServer(tmpItem, fs, false);
+                                sent = sendFileToTelegram(tmpItem, fs, true);
                             }
-                        }
-                        break;
+                            break;
+
+                        case UploadMode::Original:
+                            // Try original upload only
+                            for (int retry = 0; retry < maxRetries && !sent;
+                                 ++retry) {
+                                sent = sendFileToTelegram(tmpItem, fs, false);
+                            }
+                            break;
+
+                        case UploadMode::Both:
+                            // Try compressed first; if it fails, try original
+                            for (int retry = 0; retry < maxRetries && !sent;
+                                 ++retry) {
+                                sent = sendFileToTelegram(tmpItem, fs, true);
+                            }
+                            if (!sent) {
+                                for (int retry = 0; retry < maxRetries && !sent;
+                                     ++retry) {
+                                    sent =
+                                        sendFileToTelegram(tmpItem, fs, false);
+                                }
+                            }
+                            break;
+                    }
+
+                    if (!sent) {
+                        Logger::get().error()
+                            << "[Telegram] Unable to send file after "
+                            << maxRetries << " retries" << std::endl;
+                    } else {
+                        anySuccess = true;
+                    }
                 }
 
-                if (!sent) {
+                // Upload to ntfy (always original, no compression)
+                if (Config::get().ntfyEnabled()) {
+                    bool sent = false;
+
+                    for (int retry = 0; retry < maxRetries && !sent; ++retry) {
+                        sent = sendFileToNtfy(tmpItem, fs);
+                    }
+
+                    if (!sent) {
+                        Logger::get().error()
+                            << "[ntfy] Unable to send file after " << maxRetries
+                            << " retries" << std::endl;
+                    } else {
+                        anySuccess = true;
+                    }
+                }
+
+                if (!anySuccess) {
                     Logger::get().error()
-                        << "Unable to send file after " << maxRetries
-                        << " retries, skipping..." << std::endl;
+                        << "All upload destinations failed, skipping..."
+                        << std::endl;
                 }
 
                 // Update lastItem regardless of success to avoid retrying the
