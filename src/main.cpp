@@ -117,11 +117,10 @@ void initLogger(bool truncate) {
     // Logger::get().setLevel(LogLevel::DEBUG);
 
     constexpr std::string_view separator = "=============================";
-    auto logger = Logger::get().none();
-    logger << std::endl
-           << separator << std::endl
-           << APP_TITLE " v" << APP_VERSION << " is starting..." << std::endl
-           << separator << std::endl;
+    auto logger = Logger::get().info();
+    logger << separator << std::endl;
+    logger << APP_TITLE " v" << APP_VERSION << " is starting..." << std::endl;
+    logger << separator << std::endl;
 }
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {

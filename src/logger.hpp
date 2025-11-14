@@ -40,8 +40,8 @@ class LogMessage {
     LogMessage& operator=(LogMessage&&) = delete;
 
     ~LogMessage() {
+        // Flush only, newline is now handled by std::endl
         if (m_file) {
-            std::fputc('\n', m_file);
             std::fflush(m_file);
         }
     }
@@ -101,7 +101,11 @@ class LogMessage {
 
     // Support for std::endl and other manipulators
     LogMessage& operator<<(std::ostream& (*)(std::ostream&)) {
-        // Ignore manipulators, we always add newline in destructor
+        // Handle std::endl by flushing a newline
+        if (m_file) {
+            std::fputc('\n', m_file);
+            std::fflush(m_file);
+        }
         return *this;
     }
 
