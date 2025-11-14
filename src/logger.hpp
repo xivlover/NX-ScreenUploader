@@ -13,7 +13,8 @@
 enum class LogLevel : uint8_t {
     DEBUG = 0,
     INFO = 1,
-    ERROR = 2,
+    WARN = 2,
+    ERROR = 3,
     NONE = 10,
 };
 
@@ -157,6 +158,14 @@ class Logger {
         return LogMessage(nullptr, nullptr);
     }
 
+    LogMessage warn() {
+        if (isEnabled(LogLevel::WARN)) {
+            open();
+            return LogMessage(m_file, getPrefix(LogLevel::WARN));
+        }
+        return LogMessage(nullptr, nullptr);
+    }
+
     LogMessage error() {
         if (isEnabled(LogLevel::ERROR)) {
             open();
@@ -199,6 +208,9 @@ class Logger {
                 break;
             case LogLevel::INFO:
                 level_str = "[INFO ] ";
+                break;
+            case LogLevel::WARN:
+                level_str = "[WARN ] ";
                 break;
             case LogLevel::ERROR:
                 level_str = "[ERROR] ";
