@@ -215,6 +215,9 @@ class Logger {
             case LogLevel::ERROR:
                 level_str = "[ERROR] ";
                 break;
+            case LogLevel::NONE:
+                level_str = "";
+                break;
             default:
                 level_str = "[     ] ";
                 break;

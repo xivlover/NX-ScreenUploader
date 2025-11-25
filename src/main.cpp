@@ -117,7 +117,7 @@ void initLogger(bool truncate) {
     // Logger::get().setLevel(LogLevel::DEBUG);
 
     constexpr std::string_view separator = "=============================";
-    auto logger = Logger::get().info();
+    auto logger = Logger::get().none();
     logger << separator << std::endl;
     logger << APP_TITLE " v" << APP_VERSION << " is starting..." << std::endl;
     logger << separator << std::endl;
@@ -130,7 +130,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     mkdir(configDir.data(), 0700);
     mkdir(appConfigDir.data(), 0700);
 
-    initLogger(false);
+    // Initialize logger first (with truncate) before loading config
+    // so that config errors are properly logged
+    initLogger(true);
+
     if (!Config::get().refresh()) {
         Logger::get().error()
             << "Configuration validation failed: No valid upload channel "
@@ -145,7 +148,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     }
 
     if (!Config::get().keepLogs()) {
-        initLogger(true);
+        // Truncate logs if not keeping them
+        Logger::get().close();
+        Logger::get().truncate();
+        initLogger(false);
     }
 
     CapsAlbumStorage storage;
@@ -181,11 +187,26 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     std::string lastItem = getLastAlbumItem();
     Logger::get().info() << "Current last item: " << lastItem << std::endl;
 
+    // Log enabled upload channels
+    {
+        auto logger = Logger::get().info();
+        logger << "Enabled upload channels: ";
+        if (Config::get().telegramEnabled()) {
+            logger << "[Telegram] ";
+        }
+        if (Config::get().ntfyEnabled()) {
+            logger << "[Ntfy]";
+        }
+        logger << std::endl;
+    }
+
     // Determine Telegram upload mode based on configuration
     const std::string_view telegramUploadMode =
         Config::get().getTelegramUploadMode();
-    Logger::get().info() << "Telegram upload mode: " << telegramUploadMode
-                         << std::endl;
+    if (Config::get().telegramEnabled()) {
+        Logger::get().info()
+            << "Telegram upload mode: " << telegramUploadMode << std::endl;
+    }
 
     // Get check interval configuration
     const int checkInterval = Config::get().getCheckIntervalSeconds();
