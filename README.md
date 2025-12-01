@@ -12,7 +12,7 @@ This project was forked from [bakatrouble/sys-screenuploader](https://github.com
 - Multiple upload destinations: Telegram and/or ntfy.sh
 - Custom Telegram Bot API URL support (for reverse proxy)
 - Custom new screen capture check interval support
-- Less memory usage compared to the original project (from ~1.852 MB to ~1.336 MB)
+- Less memory usage compared to the original project (from ~1.852 MB to ~1.339 MB)
 - No more fatal crashes when opening nxmenu in applet mode alongside other sysmodules
 
 ## Requirements

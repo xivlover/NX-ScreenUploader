@@ -21,9 +21,10 @@ template <size_t ExpectedLen>
 }
 }  // namespace
 
-std::string getLastAlbumItem() {
+std::expected<std::string, std::string> getLastAlbumItem() {
     constexpr std::string_view albumPath = ALBUM_PATH;
-    if (!fs::is_directory(albumPath)) return "<No album directory: img:/>";
+    if (!fs::is_directory(albumPath))
+        return std::unexpected("No album directory: img:/");
 
     // Find the largest year directory
     fs::path maxYear;
@@ -35,7 +36,7 @@ std::string getLastAlbumItem() {
             }
         }
     }
-    if (maxYear.empty()) return "<No years in img:/>";
+    if (maxYear.empty()) return std::unexpected("No years in img:/");
 
     // Find the largest month directory
     fs::path maxMonth;
@@ -47,7 +48,7 @@ std::string getLastAlbumItem() {
             }
         }
     }
-    if (maxMonth.empty()) return "<No months in year>";
+    if (maxMonth.empty()) return std::unexpected("No months in year");
 
     // Find the largest day directory
     fs::path maxDay;
@@ -59,7 +60,7 @@ std::string getLastAlbumItem() {
             }
         }
     }
-    if (maxDay.empty()) return "<No days in month>";
+    if (maxDay.empty()) return std::unexpected("No days in month");
 
     // Find the latest file (lexicographically largest)
     fs::path maxFile;
@@ -71,7 +72,7 @@ std::string getLastAlbumItem() {
             }
         }
     }
-    if (maxFile.empty()) return "<No screenshots in day>";
+    if (maxFile.empty()) return std::unexpected("No screenshots in day");
 
     return maxFile.string();
 }

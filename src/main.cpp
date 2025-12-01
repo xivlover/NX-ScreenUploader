@@ -67,6 +67,12 @@ void __appInit(void) {
         fatalThrow(rc);
     }
 
+    // Necessary to get right CapsAlbumStorage after reboot
+    rc = nsInitialize();
+    if (R_FAILED(rc)) {
+        fatalThrow(rc);
+    }
+
     constexpr SocketInitConfig socket_config = {
         .tcp_tx_buf_size = TCP_TX_BUF_SIZE,
         .tcp_rx_buf_size = TCP_RX_BUF_SIZE,
@@ -104,6 +110,7 @@ void __appExit(void) {
     fsdevUnmountAll();
     fsExit();
     capsaExit();
+    nsExit();
     socketExit();
     smExit();
 }
@@ -184,8 +191,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
                          << " storage" << std::endl;
 
     // Get the initial last file (for comparison)
-    std::string lastItem = getLastAlbumItem();
-    Logger::get().info() << "Current last item: " << lastItem << std::endl;
+    // If album is not ready (Err), we'll use the first valid item later
+    auto lastItemResult = getLastAlbumItem();
+    if (lastItemResult.has_value()) {
+        Logger::get().info()
+            << "Current last item: " << lastItemResult.value() << std::endl;
+    } else {
+        Logger::get().info()
+            << "Album not ready: " << lastItemResult.error() << std::endl;
+    }
 
     // Log enabled upload channels
     {
@@ -220,9 +234,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     constexpr int maxRetries = 3;
 
     while (true) {
-        std::string tmpItem = getLastAlbumItem();
+        auto tmpItemResult = getLastAlbumItem();
 
-        if (lastItem < tmpItem) {
+        // Skip if tmpItem is an error (album not ready)
+        if (!tmpItemResult.has_value()) {
+            svcSleepThread(sleepDuration);
+            continue;
+        }
+
+        const std::string& tmpItem = tmpItemResult.value();
+
+        // If lastItem was an error, or tmpItem is newer, process it
+        const bool shouldProcess =
+            !lastItemResult.has_value() || lastItemResult.value() < tmpItem;
+
+        if (shouldProcess) {
             const size_t fs = filesize(tmpItem);
 
             if (fs > 0) {
@@ -301,9 +327,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
                         << std::endl;
                 }
 
-                // Update lastItem regardless of success to avoid retrying the
-                // same file forever
-                lastItem = std::move(tmpItem);
+                // Update lastItemResult regardless of success to avoid
+                // retrying the same file forever
+                lastItemResult = tmpItem;
             }
 
             Logger::get().close();
