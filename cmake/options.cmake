@@ -3,8 +3,8 @@
 # statistics, dependencies and versions.
 option(cmake_VERBOSE "Enable for verbose logging." ON)
 
-# Whether to set the language standard to C++ 20 or C++ 11.
-option(USE_CPP_20 "Enable this for C++20 language standard." ON)
+# Whether to set the language standard to C++ 23 or C++ 11.
+option(USE_CPP_23 "Enable this for C++23 language standard." ON)
 
 # Enable LTO (Link Time Optimization) for better optimization
 # Set to OFF to disable LTO
